@@ -443,7 +443,6 @@ public class SimpleWebServer {
                 if(!first) sb.append(','); first=false;
                 sb.append("{\"first\":\"").append(escape(a!=null?a.first:"")).append("\",")
                         .append("\"last\":\"").append(escape(a!=null?a.last :"")).append("\",")
-                        .append("\"email\":\"").append(escape(a!=null?a.email:"")).append("\",")
                         .append("\"img\":\"").append(escape(a!=null?a.img  :"")).append("\",")
                         .append("\"evidence\":\"").append(escape(k.imageDataUrl)).append("\",")
                         .append("\"status\":\"").append(escape(k.status)).append("\",")
