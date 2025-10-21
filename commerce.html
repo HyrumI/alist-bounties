@@ -1,0 +1,192 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Commerce — A-List Bounties</title>
+    <style>
+        :root { --bg:#0f172a; --card:#111827; --text:#e5e7eb; --muted:#94a3b8; --accent:#60a5fa; }
+        *{box-sizing:border-box}
+        body{margin:0;min-height:100vh;background:var(--bg);color:var(--text);font-family:system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial}
+        .container{max-width:900px;margin:0 auto;padding:22px}
+
+        .top-banner{
+          width:100%;background:linear-gradient(180deg,#1e293b,#0f172a);color:#f1f5f9;
+          text-align:left;padding-left:40px;font-family:"Cinzel",serif;font-weight:700;font-size:28px;letter-spacing:2px;
+          padding-top:14px;padding-bottom:18px;border-bottom:2px solid #334155;box-shadow:0 4px 20px rgba(0,0,0,.5);
+          text-transform:uppercase;position:sticky;top:0;z-index:10;
+        }
+        .top-banner::after{display:none;}
+
+        header{display:flex;align-items:center;gap:12px;margin-bottom:16px;margin-top:16px}
+        a.back{padding:8px 12px;border-radius:10px;border:1px solid #1f2937;background:#12213f;color:var(--text);text-decoration:none;font-weight:600}
+        header > div{ margin-left:8px; }
+        h1{margin:0;font-size:22px}
+        p.sub{margin:6px 0 0;color:var(--muted)}
+
+        .pill-row{display:flex;flex-wrap:wrap;gap:12px;margin-top:16px}
+        .pill{
+          display:inline-flex;align-items:center;gap:8px;
+          padding:12px 18px;font-weight:700;font-size:16px;
+          border-radius:999px;border:1px solid #1f2937;background:linear-gradient(180deg,#1e293b,#111827);
+          box-shadow:0 4px 10px rgba(0,0,0,.35);
+        }
+        .pill.coin{
+          background:linear-gradient(180deg,#fbbf24 0%, #d97706 70%, #b45309 100%);
+          border-color:#92400e;color:#0b1220;
+          box-shadow:0 2px 8px rgba(0,0,0,.35), inset 0 1px 0 rgba(255,255,255,.3);
+        }
+        .pill.bounty{ background:linear-gradient(180deg,#123558,#0d2341); border-color:#1e3a8a; }
+        .pill.current{ background:linear-gradient(180deg,#1e40af,#1e3a8a); border-color:#1e3a8a; }
+
+        .card{background:var(--card);border:1px solid #1f2937;border-radius:16px;padding:18px;box-shadow:0 6px 20px rgba(0,0,0,.4);margin-top:20px}
+        h2{font-size:18px;margin:0 0 10px 0;color:#cbd5e1}
+        .grid{display:grid;gap:18px;grid-template-columns:repeat(auto-fit,minmax(200px,1fr))}
+        .card img{width:80px;height:80px;border-radius:50%;object-fit:cover;margin-bottom:10px}
+        .btn{padding:8px 12px;border-radius:10px;border:1px solid #1f2937;background:#1d4ed8;color:#fff;font-weight:700;cursor:pointer}
+        .btn.danger{background:#b91c1c}
+        .msg{margin-top:8px;font-size:14px;color:var(--muted)}
+    </style>
+</head>
+<body>
+<header class="top-banner">The Continental</header>
+
+<div class="container">
+    <header>
+        <a class="back" href="/home">← Back</a>
+        <div>
+            <h1>Commerce</h1>
+            <p class="sub">Pay off your own bounty or spend a coin to choose your next target.</p>
+        </div>
+    </header>
+
+    <div class="pill-row">
+        <div id="pillCoins" class="pill coin">💰 Coins: <span>—</span></div>
+        <div id="pillBounty" class="pill bounty">🎯 Your Bounty: <span>—</span></div>
+        <div id="pillCurrent" class="pill current">🎯 Current Target: <span>—</span></div>
+    </div>
+
+    <div class="card">
+        <h2>Pay Off Your Bounty</h2>
+        <button id="pay1" class="btn">Pay 1 Coin</button>
+        <button id="payAll" class="btn danger">Pay All</button>
+        <p class="msg" id="msgPay"></p>
+    </div>
+
+    <div class="card">
+        <h2>Change Your Current Bounty</h2>
+        <div id="targetGrid" class="grid"></div>
+        <p class="msg" id="msgSet"></p>
+    </div>
+</div>
+
+<script>
+    function avatarFor(u){
+      return (u && u.img && u.img.trim())
+        ? u.img
+        : "https://api.dicebear.com/7.x/initials/svg?seed=" + encodeURIComponent(`${u.first||""} ${u.last||""}`);
+    }
+    async function fetchJSON(url, opts){
+      const r = await fetch(url, opts);
+      let data = null; try { data = await r.json(); } catch(_) {}
+      return { ok: r.ok, data };
+    }
+    function updatePills({coins, myPot, assigned, targets}){
+      document.querySelector("#pillCoins span").textContent = (typeof coins==="number")?coins:"—";
+      document.querySelector("#pillBounty span").textContent = (typeof myPot==="number")?myPot:"—";
+
+      // 🟢 CHANGE: show assigned target's name instead of email
+      let assignedDisplay = "None";
+      if (assigned && targets && targets.length){
+        const found = targets.find(t => (t.email||"").toLowerCase() === assigned.toLowerCase());
+        if (found) assignedDisplay = `${found.first || ""} ${found.last || ""}`.trim();
+        else assignedDisplay = assigned;
+      } else if (assigned) {
+        assignedDisplay = assigned;
+      }
+      document.querySelector("#pillCurrent span").textContent = assignedDisplay;
+    }
+    function renderTargets(targets, assignedLower){
+      const grid = document.getElementById("targetGrid");
+      const msg  = document.getElementById("msgSet");
+      grid.innerHTML = "";
+      if (!targets || !targets.length){ msg.textContent = "No available targets right now."; return; }
+      msg.textContent = "";
+      for (const t of targets){
+        const isCurrent = ((t.email||"").toLowerCase() === assignedLower);
+        const wrap = document.createElement("div");
+        wrap.innerHTML = `
+          <div style="text-align:center;background:#0d1326;border:1px solid #1f2937;border-radius:12px;padding:12px">
+            <img src="${avatarFor(t)}" alt="${(t.first||"User")}'s photo"
+                style="width:80px;height:80px;border-radius:50%;object-fit:cover;margin-bottom:8px">
+            <p style="margin:6px 0 10px 0;font-weight:700">${t.first||""} ${t.last||""}</p>
+            <button class="btn" ${isCurrent?"disabled style='opacity:.6;cursor:not-allowed'":""} data-email="${t.email}">
+              ${isCurrent ? "Already your bounty" : "Set as Bounty (1 coin)"}
+            </button>
+          </div>`;
+        grid.appendChild(wrap);
+        const btn = wrap.querySelector(".btn");
+        if (!isCurrent){
+          btn.addEventListener("click", async()=>{
+            const { ok, data } = await fetchJSON("/api/commerce/set-bounty", {
+              method:"POST", headers:{ "Content-Type":"application/x-www-form-urlencoded" },
+              body: "target=" + encodeURIComponent(t.email)
+            });
+            if (ok && data && data.ok){
+              document.getElementById("msgSet").textContent = "Bounty updated!";
+              await loadSummary();
+            } else {
+              const err = (data && data.error) || "failed";
+              document.getElementById("msgSet").textContent =
+                (err==="already_current") ? "That user is already your current bounty." : ("Error: " + err);
+            }
+          });
+        }
+      }
+    }
+    async function deriveTargetsFallback(meEmail){
+      const { ok, data } = await fetchJSON("/api/users");
+      if (!ok || !data || !Array.isArray(data.users)) return [];
+      const me = (meEmail || data.me || "").toLowerCase();
+      return data.users.filter(u => (u.email||"").toLowerCase() !== me)
+                       .map(u => ({ first:u.first, last:u.last, email:u.email, img:u.img }));
+    }
+    async function loadSummary(){
+      const { ok, data } = await fetchJSON("/api/commerce/summary");
+      if (!ok){ window.location.href="/login"; return; }
+      const s = data || {};
+      updatePills({ coins: s.coins, myPot: s.myPot, assigned: s.assigned, targets: s.targets });
+
+      // pay buttons
+      const pay1  = document.getElementById("pay1");
+      const payAll= document.getElementById("payAll");
+      const disable = (s.myPot || 0) <= 0;
+      for (const el of [pay1,payAll]) {
+        el.disabled = disable; el.style.opacity = disable?".5":"1"; el.style.cursor = disable?"not-allowed":"pointer";
+      }
+      pay1.onclick = async()=>{
+        if (disable) return;
+        const { ok, data } = await fetchJSON("/api/commerce/payoff-self", {
+          method:"POST", headers:{"Content-Type":"application/x-www-form-urlencoded"}, body:"amount=1"
+        });
+        document.getElementById("msgPay").textContent = ok && data && data.ok ? "Paid 1 coin off your bounty." : ("Error: " + ((data&&data.error)||"failed"));
+        await loadSummary();
+      };
+      payAll.onclick = async()=>{
+        if (disable) return;
+        const { ok, data } = await fetchJSON("/api/commerce/payoff-self", {
+          method:"POST", headers:{"Content-Type":"application/x-www-form-urlencoded"}, body:"mode=all"
+        });
+        document.getElementById("msgPay").textContent = ok && data && data.ok ? "Cleared your entire bounty!" : ("Error: " + ((data&&data.error)||"failed"));
+        await loadSummary();
+      };
+
+      // targets
+      let targets = Array.isArray(s.targets) ? s.targets : [];
+      if (!targets.length) targets = await deriveTargetsFallback(s.me);
+      renderTargets(targets, (s.assigned||"").toLowerCase());
+    }
+    loadSummary();
+</script>
+</body>
+</html>

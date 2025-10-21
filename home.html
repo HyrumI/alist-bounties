@@ -1,0 +1,349 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Home — A-List Bounties</title>
+  <style>
+    :root { --bg:#0f172a; --card:#111827; --text:#e5e7eb; --muted:#94a3b8; }
+    *{box-sizing:border-box}
+    body{margin:0;min-height:100vh;background:var(--bg);color:var(--text);font-family:system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial}
+    .container{max-width:1000px;margin:0 auto;padding:18px}
+
+    .top-banner{
+      width:100%;background:linear-gradient(180deg,#1e293b,#0f172a);
+      color:#f1f5f9;text-align:left;padding-left:40px;font-family:"Cinzel",serif;
+      font-weight:700;font-size:28px;letter-spacing:2px;padding-top:14px;padding-bottom:18px;
+      border-bottom:2px solid #334155;box-shadow:0 4px 20px rgba(0,0,0,.5);
+      text-transform:uppercase;position:sticky;top:0;z-index:10;
+    }
+    .top-banner::after{display:none;}
+
+    .me-card{display:flex;gap:16px;align-items:center;flex-wrap:wrap;
+      background:linear-gradient(180deg,#0d1326,#111827);border:1px solid #1f2937;border-radius:16px;padding:16px;box-shadow:0 6px 20px rgba(0,0,0,.4);margin-top:16px}
+    .me-pic{width:56px;height:56px;border-radius:50%;object-fit:cover;border:1px solid #1f2937}
+    .me-name{margin:0;font-weight:700}
+    .me-sub{margin:2px 0 0 0;color:var(--muted);font-size:13px}
+
+    .action{margin-left:auto;padding:8px 12px;border-radius:10px;border:1px solid #1f2937;background:#1d4ed8;color:#fff;text-decoration:none;font-weight:700;box-shadow:0 4px 12px rgba(0,0,0,.25)}
+    .action.secondary{ background:#0ea5e9; }
+    .logout{padding:8px 12px;border-radius:10px;border:1px solid #1f2937;background:#c2410c;color:white;text-decoration:none;font-weight:600}
+
+    h2{margin:16px 0 10px 0;font-size:18px;color:#cbd5e1}
+    .section{margin-top:18px}
+    .grid{display:grid;gap:18px;grid-template-columns:repeat(auto-fit,minmax(220px,1fr))}
+
+    .card{background:linear-gradient(180deg,#0d1326,#111827);border:1px solid #1f2937;border-radius:16px;padding:16px;text-align:center;box-shadow:0 6px 20px rgba(0,0,0,.4)}
+    .card img{width:90px;height:90px;border-radius:50%;object-fit:cover;margin-bottom:12px;border:1px solid #1f2937}
+
+    .btn{padding:8px 12px;border-radius:10px;border:1px solid #1f2937;background:#12213f;color:var(--text);cursor:pointer;font-weight:600}
+    .btn.primary{background:#1d4ed8;color:#fff}
+    a.btn, a.btn:link, a.btn:visited, a.btn:hover, a.btn:active { text-decoration:none }
+
+    .badge{display:inline-flex;align-items:center;gap:6px;padding:2px 10px;border:1px solid #1f2937;border-radius:999px;background:#123558;font-size:12px;line-height:1;font-weight:700;vertical-align:middle}
+    .badge.coin{background:linear-gradient(180deg,#fbbf24 0%, #d97706 70%, #b45309 100%);border-color:#92400e;color:#0b1220;box-shadow:0 2px 6px rgba(0,0,0,.25), inset 0 1px 0 rgba(255,255,255,.25)}
+    .badge.coin .dot{width:10px;height:10px;border-radius:50%;background:radial-gradient(circle at 35% 35%, #fff7cc 0%, #fde68a 35%, #f59e0b 70%);box-shadow:inset 0 0 0 1px rgba(255,255,255,.35)}
+
+    .row{display:flex;gap:10px;align-items:center;justify-content:center;flex-wrap:wrap}
+    .evidence{width:80px;height:80px;border-radius:10px;border:1px solid #1f2937;object-fit:cover}
+
+    /* Pills */
+    .pill{display:inline-flex;align-items:center;gap:12px;padding:6px 12px;border:1px solid #1f2937;border-radius:999px;background:#12213f;font-weight:700}
+
+    /* === New glossy coin meter inside the coin pill === */
+    .coin-meter{display:flex;align-items:center;gap:6px; flex-wrap:wrap; max-width:180px}
+    .coin-chip{
+      width:16px;height:16px;border-radius:50%;
+      background:radial-gradient(circle at 35% 35%, #fff7cc 0%, #fde68a 40%, #f59e0b 72%, #b45309 100%);
+      border:1px solid rgba(0,0,0,.35);
+      box-shadow:inset 0 1px 0 rgba(255,255,255,.35), 0 1px 2px rgba(0,0,0,.35);
+      position:relative; overflow:hidden;
+    }
+    .coin-chip::after{
+      content:""; position:absolute; top:-60%; left:-60%; width:120%; height:120%;
+      background:linear-gradient(120deg, rgba(255,255,255,.65), rgba(255,255,255,0));
+      transform:rotate(20deg);
+      mix-blend-mode:screen; opacity:.35;
+    }
+    .coin-chip.empty{
+      background:linear-gradient(180deg, #273244, #0b1220);
+      border:1px solid #223047;
+      box-shadow:inset 0 1px 0 rgba(255,255,255,.05);
+      opacity:.5;
+    }
+    .coin-overflow{
+      font-size:12px;color:#cbd5e1;padding:0 4px; border-radius:6px; border:1px dashed #334155;
+      background:#0b1220;
+    }
+  </style>
+</head>
+<body>
+<header class="top-banner">The Continental</header>
+
+<div class="container">
+  <!-- User bar -->
+  <section class="me-card">
+    <img id="mePic" class="me-pic" alt="Your profile">
+    <div>
+      <h2 id="meName" class="me-name">You</h2>
+      <p id="meEmail" class="me-sub"></p>
+    </div>
+
+    <a class="action" href="/contracts">Open Contract</a>
+    <a class="action secondary" href="/commerce">Commerce</a>
+
+    <!-- Coin pill upgraded -->
+    <div class="pill" id="coinPill" title="Your wallet">
+      <span>Coins: <strong id="meCoins">—</strong></span>
+      <span id="coinMeter" class="coin-meter" aria-label="0 coins"></span>
+    </div>
+
+    <div class="pill">Wanted Level: <span id="mePoints">—</span></div>
+
+    <a class="logout" href="/logout">Logout</a>
+  </section>
+
+  <!-- KILL SUBMISSIONS — shown above when pending exists -->
+  <section id="reviewSection" class="section" style="display:none">
+    <h2>Kill Submissions</h2>
+    <div id="reviewList"></div>
+  </section>
+
+  <!-- Your +2 bounty -->
+  <section class="section">
+    <h2>Current Bounty</h2>
+    <div id="yourBounty"></div>
+  </section>
+
+  <!-- Patrons -->
+  <section class="section">
+    <h2>Patrons</h2>
+    <div id="openGrid" class="grid"></div>
+  </section>
+
+  <!-- Global feed -->
+  <section class="section">
+    <h2>The Excommunicados</h2>
+    <div id="exAll"></div>
+  </section>
+</div>
+
+<script>
+  const bountyEl   = document.getElementById("yourBounty");
+  const gridEl     = document.getElementById("openGrid");
+  const reviewEl   = document.getElementById("reviewList");
+  const reviewSec  = document.getElementById("reviewSection");
+  const exAllEl    = document.getElementById("exAll");
+
+  function avatarFor(u) {
+    return (u && u.img && u.img.trim())
+      ? u.img
+      : "https://api.dicebear.com/7.x/initials/svg?seed=" + encodeURIComponent(`${u.first||""} ${u.last||""}`);
+  }
+
+  function coinBadgeHTML(amount) {
+    return (amount && amount > 0)
+      ? `<span class="badge coin" title="Coin pot on this target"><span class="dot"></span>+${amount} coin${amount===1?"":"s"} on bounty</span>`
+      : "";
+  }
+
+  /* === New: draw glossy coin meter inside coin pill === */
+  function drawCoinMeter(count) {
+    const meter = document.getElementById('coinMeter');
+    const n = Math.max(0, Number(count||0));
+    const MAX = 12; // show up to 12 chips, overflow becomes +N
+    meter.innerHTML = "";
+    meter.setAttribute('aria-label', `${n} coins`);
+    const chipsToShow = Math.min(n, MAX);
+
+    for (let i=0; i<chipsToShow; i++) {
+      const span = document.createElement('span');
+      span.className = 'coin-chip';
+      meter.appendChild(span);
+    }
+    for (let i=chipsToShow; i<Math.min(MAX, 12); i++){
+      // show a couple of empties to keep shape if you like; comment out if not desired
+      // const span = document.createElement('span');
+      // span.className = 'coin-chip empty';
+      // meter.appendChild(span);
+    }
+    if (n > MAX) {
+      const over = document.createElement('span');
+      over.className = 'coin-overflow';
+      over.textContent = `+${n - MAX}`;
+      meter.appendChild(over);
+    }
+  }
+
+  function renderUsers(data){
+    const me = data.users.find(u => (u.email||"").toLowerCase() === (data.me||"").toLowerCase());
+    if (!me) { location.href = "/login"; return; }
+
+    // top bar
+    document.getElementById("mePic").src = avatarFor(me);
+    document.getElementById("meName").textContent = `${me.first} ${me.last}`;
+    document.getElementById("meEmail").textContent = me.email;
+    document.getElementById("mePoints").textContent = me.value;
+
+    // coins + glossy meter
+    const coins = me.coins ?? 0;
+    document.getElementById("meCoins").textContent = coins;
+    drawCoinMeter(coins);
+
+    const pendingSet = new Set((data.pending || []).map(e => (e||"").toLowerCase()));
+    const blockedByIncoming = !!data.incomingPending;
+
+    // Current bounty card
+    bountyEl.innerHTML = "";
+    const target = data.users.find(u => (u.email||"").toLowerCase() === (data.target||"").toLowerCase());
+    if (target) {
+      const isPending = pendingSet.has((target.email||"").toLowerCase());
+      const card = document.createElement("div");
+      card.className = "card";
+      card.innerHTML = `
+        <img src="${avatarFor(target)}" alt="${target.first}'s photo">
+        <h3 style="margin:0 0 6px 0;font-size:18px;display:flex;justify-content:center;gap:8px;align-items:center;flex-wrap:wrap">
+          ${target.first} <span class="badge">+2 bonus</span> ${coinBadgeHTML(target.worth)}
+        </h3>
+        <p style="margin:0 0 10px 0;color:#94a3b8;font-size:13px">Wanted level: ${target.value}</p>
+        ${
+          blockedByIncoming
+            ? `<button class="btn" disabled style="opacity:.6;cursor:not-allowed">Locked — Pending against you</button>`
+            : isPending
+              ? `<button class="btn" disabled style="opacity:.6;cursor:not-allowed">Pending…</button>`
+              : `<a class="btn primary" href="/kill-submit?target=${encodeURIComponent(target.email)}">Confirm Kill</a>`
+        }
+      `;
+      bountyEl.appendChild(card);
+    } else {
+      bountyEl.textContent = "No bounty available right now.";
+    }
+
+    // Patrons grid
+    gridEl.innerHTML = "";
+    const others = data.users.filter(u => (u.email||"").toLowerCase() !== (data.me||"").toLowerCase());
+    for (const u of others) {
+      const isSpecial = (u.email||"").toLowerCase() === (data.target||"").toLowerCase();
+      const isPending = pendingSet.has((u.email||"").toLowerCase());
+
+      const div = document.createElement("div");
+      div.className = "card";
+      div.innerHTML = `
+        <img src="${avatarFor(u)}" alt="${u.first}'s photo">
+        <h3 style="margin:0 0 6px 0;font-size:18px;display:flex;justify-content:center;gap:8px;align-items:center;flex-wrap:wrap">
+          ${u.first} ${isSpecial ? `<span class="badge">+2 bonus</span>` : ""} ${coinBadgeHTML(u.worth)}
+        </h3>
+        <p style="margin:0 0 10px 0;color:#94a3b8;font-size:13px">Wanted level: ${u.value}</p>
+        ${
+          blockedByIncoming
+            ? `<button class="btn" disabled style="opacity:.6;cursor:not-allowed">Locked — Pending against you</button>`
+            : isPending
+              ? `<button class="btn" disabled style="opacity:.6;cursor:not-allowed">Pending…</button>`
+              : `<a class="btn" href="/kill-submit?target=${encodeURIComponent(u.email)}">Confirm Kill</a>`
+        }
+      `;
+      gridEl.appendChild(div);
+    }
+  }
+
+  function renderReview(items){
+    if (!items || !items.length){
+      reviewSec.style.display = "none";
+      reviewEl.innerHTML = "";
+      return;
+    }
+    reviewSec.style.display = "block";
+
+    reviewEl.innerHTML = "";
+    for (const it of items){
+      const row = document.createElement("div");
+      row.className = "card";
+      row.innerHTML = `
+        <div class="row">
+          <img class="evidence" src="${it.image}" alt="evidence">
+          <div>
+            <div style="font-weight:700">Submitted by: ${it.actor}</div>
+            <div style="color:#94a3b8;font-size:12px">${new Date(it.ts).toLocaleString()}</div>
+          </div>
+        </div>
+        <div class="row" style="margin-top:10px">
+          <button class="btn primary" data-id="${it.id}" data-d="confirm">Confirm</button>
+          <button class="btn" data-id="${it.id}" data-d="deny">Deny</button>
+        </div>
+      `;
+      reviewEl.appendChild(row);
+    }
+    reviewEl.querySelectorAll("button[data-id]").forEach(btn=>{
+      btn.addEventListener("click", async ()=>{
+        const id = btn.getAttribute("data-id");
+        const decision = btn.getAttribute("data-d");
+        await fetch("/api/kill/decision", {
+          method:"POST", headers:{ "Content-Type":"application/x-www-form-urlencoded" },
+          body: "id=" + encodeURIComponent(id) + "&decision=" + encodeURIComponent(decision)
+        });
+        await loadAll();
+      });
+    });
+  }
+
+  function avatarForUser(u){
+    return (u && u.img && u.img.trim())
+      ? u.img
+      : "https://api.dicebear.com/7.x/initials/svg?seed=" + encodeURIComponent(`${u?.first||""} ${u?.last||""}`);
+  }
+
+  function renderGlobalKills(items){
+    exAllEl.innerHTML = "";
+    if (!items || !items.length){
+      exAllEl.innerHTML = `<div class="card" style="color:#94a3b8">No activity yet.</div>`;
+      return;
+    }
+
+    for (const k of items){
+      const statusText = (k.status||"pending");
+      const row = document.createElement("div");
+      row.className = "card";
+      row.style.textAlign = "left";
+      row.innerHTML = `
+        <div style="display:flex;gap:12px;align-items:center;flex-wrap:wrap">
+          <img src="${avatarForUser(k.actor)}" alt="" style="width:48px;height:48px;border-radius:50%;object-fit:cover;border:1px solid #1f2937">
+          <div style="font-weight:700">${k.actor?.first||""} ${k.actor?.last||""}</div>
+          <div style="color:#94a3b8;font-size:12px">&nbsp;(${k.actor?.email||""})</div>
+
+          <div style="margin:0 8px;color:#94a3b8">→</div>
+
+          <img src="${avatarForUser(k.victim)}" alt="" style="width:48px;height:48px;border-radius:50%;object-fit:cover;border:1px solid #1f2937">
+          <div style="font-weight:700">${k.victim?.first||""} ${k.victim?.last||""}</div>
+          <div style="color:#94a3b8;font-size:12px">&nbsp;(${k.victim?.email||""})</div>
+
+          <span class="badge" style="margin-left:auto">Status: ${statusText.charAt(0).toUpperCase()+statusText.slice(1)}</span>
+        </div>
+
+        <div style="display:flex;gap:12px;align-items:center;flex-wrap:wrap;margin-top:10px">
+          ${k.evidence ? `<img src="${k.evidence}" class="evidence" alt="evidence">` : ""}
+          <div style="color:#cbd5e1;font-size:13px">${new Date(k.ts).toLocaleString()}</div>
+        </div>
+      `;
+      exAllEl.appendChild(row);
+    }
+  }
+
+  async function loadAll(){
+    const u = await fetch("/api/users");
+    if (!u.ok){ location.href="/login"; return; }
+    const data = await u.json();
+    renderUsers(data);
+
+    const rq = await fetch("/api/kill/review");
+    const rj = rq.ok ? await rq.json().catch(()=>({items:[]})) : {items:[]};
+    renderReview(rj.items || []);
+
+    const g = await fetch("/api/kills");
+    const gj = g.ok ? await g.json().catch(()=>({items:[]})) : {items:[]};
+    renderGlobalKills(gj.items || []);
+  }
+
+  loadAll();
+</script>
+</body>
+</html>

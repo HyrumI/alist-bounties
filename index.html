@@ -1,0 +1,67 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <title>Sign Up — A-List Bounties</title>
+  <style>
+    :root { --bg:#0f172a; --card:#111827; --text:#e5e7eb; --muted:#94a3b8; }
+    *{box-sizing:border-box}
+    body{margin:0;min-height:100vh;background:var(--bg);color:var(--text);font-family:system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial}
+
+    .top-banner{
+      width:100%;background:linear-gradient(180deg,#1e293b,#0f172a);
+      color:#f1f5f9;text-align:center;font-family:"Cinzel",serif;font-weight:700;
+      font-size:28px;letter-spacing:2px;padding:14px 0 18px 0;border-bottom:2px solid #334155;
+      box-shadow:0 4px 20px rgba(0,0,0,.5);text-transform:uppercase;position:sticky;top:0;z-index:10;
+    }
+    .top-banner::after{
+      content:"";display:block;height:3px;width:140px;margin:8px auto 0;border-radius:999px;
+      background:linear-gradient(90deg,#b45309,#f59e0b,#b45309);box-shadow:0 0 12px rgba(245,158,11,.45);
+    }
+    /* make the banner text act like a link without looking like one */
+    .top-banner a{
+      color:inherit;text-decoration:none;display:inline-block;padding:0 8px;
+    }
+    .top-banner a:focus{outline:2px solid #f59e0b;outline-offset:4px;border-radius:6px}
+
+    .wrap{max-width:520px;margin:40px auto;padding:22px;background:var(--card);border:1px solid #1f2937;border-radius:16px;box-shadow:0 6px 20px rgba(0,0,0,.4)}
+    h1{margin:0 0 12px 0;font-size:22px}
+    .muted{color:var(--muted);margin:0 0 16px 0}
+    label{display:block;margin:10px 0 6px}
+    input{width:100%;padding:10px;border-radius:10px;border:1px solid #334155;background:#0b1220;color:var(--text)}
+    .row{display:flex;gap:10px;align-items:center;margin-top:14px}
+    .btn{padding:10px 12px;border-radius:10px;border:1px solid #1f2937;background:#1d4ed8;color:#fff;font-weight:700;cursor:pointer}
+    a.link{color:#60a5fa;text-decoration:none}
+  </style>
+</head>
+<body>
+<header class="top-banner"><a href="/home" aria-label="Go to Home">The Continental</a></header>
+
+<div class="wrap">
+  <h1>Create your account</h1>
+  <p class="muted">Join the hunt. You’ll start with 3 coins and a Wanted level of 10.</p>
+  <form action="/signup-post" method="post" novalidate>
+    <label for="first">First name</label>
+    <input id="first" name="first" autocomplete="given-name" required />
+
+    <label for="last">Last name</label>
+    <input id="last" name="last" autocomplete="family-name" required />
+
+    <label for="email">Email</label>
+    <input id="email" name="email" type="email" autocomplete="email" inputmode="email" required />
+
+    <label for="password">Password</label>
+    <input id="password" name="password" type="password" autocomplete="new-password" minlength="4" required />
+
+    <label for="img">Avatar URL (optional)</label>
+    <input id="img" name="img" placeholder="https://..." pattern="https?://.*" />
+
+    <div class="row">
+      <button class="btn" type="submit">Sign Up</button>
+      <a class="link" href="/login">I already have an account</a>
+    </div>
+  </form>
+</div>
+</body>
+</html>

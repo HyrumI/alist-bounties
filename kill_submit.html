@@ -1,0 +1,94 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <title>Submit Kill — A-List Bounties</title>
+  <style>
+    :root { --bg:#0f172a; --card:#111827; --text:#e5e7eb; --muted:#94a3b8; }
+    *{box-sizing:border-box}
+    body{margin:0;min-height:100vh;background:var(--bg);color:var(--text);font-family:system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial}
+    .container{max-width:720px;margin:0 auto;padding:18px}
+    .top-banner{
+      width:100%;background:linear-gradient(180deg,#1e293b,#0f172a);
+      color:#f1f5f9;text-align:left;padding-left:40px;font-family:"Cinzel",serif;
+      font-weight:700;font-size:28px;letter-spacing:2px;padding-top:14px;padding-bottom:18px;
+      border-bottom:2px solid #334155;box-shadow:0 4px 20px rgba(0,0,0,.5);
+      text-transform:uppercase;position:sticky;top:0;z-index:10;
+    }
+    .top-banner::after{display:none;}
+    .card{background:var(--card);border:1px solid #1f2937;border-radius:16px;padding:18px;box-shadow:0 6px 20px rgba(0,0,0,.4);margin-top:18px}
+    .row{display:flex;gap:14px;align-items:center;flex-wrap:wrap}
+    .btn{padding:10px 12px;border-radius:10px;border:1px solid #1f2937;background:#1d4ed8;color:#fff;font-weight:700;cursor:pointer}
+    .back{padding:8px 12px;border-radius:10px;border:1px solid #1f2937;background:#12213f;color:var(--text);text-decoration:none;font-weight:600}
+    .muted{color:var(--muted)}
+    .preview{width:220px;height:220px;border-radius:12px;border:1px solid #334155;object-fit:cover;background:#0b1220}
+  </style>
+</head>
+<body>
+<header class="top-banner">The Continental</header>
+<div class="container">
+  <a class="back" href="/home">← Back</a>
+
+  <div class="card">
+    <h1 style="margin:0 0 8px 0;font-size:20px">Submit Kill Evidence</h1>
+    <p class="muted">Target: <span id="tgt">—</span></p>
+
+    <div class="row" style="margin-top:10px">
+      <input id="file" type="file" accept="image/*">
+      <button id="submit" class="btn" disabled>Submit</button>
+    </div>
+
+    <div style="margin-top:12px">
+      <img id="preview" class="preview" alt="preview" />
+    </div>
+
+    <p id="msg" class="muted" style="margin-top:10px"></p>
+    <div id="goHome" style="display:none;margin-top:10px">
+      <a class="btn" href="/home">Go to Home</a>
+    </div>
+  </div>
+</div>
+
+<script>
+  const params = new URLSearchParams(location.search);
+  const target = params.get("target") || "";
+  document.getElementById("tgt").textContent = target || "(missing)";
+
+  const fileEl = document.getElementById("file");
+  const submitBtn = document.getElementById("submit");
+  const preview = document.getElementById("preview");
+  const msg = document.getElementById("msg");
+  const goHome = document.getElementById("goHome");
+
+  let dataUrl = "";
+
+  fileEl.addEventListener("change", ()=>{
+    const f = fileEl.files && fileEl.files[0];
+    if (!f){ dataUrl=""; preview.src=""; submitBtn.disabled=true; return; }
+    const reader = new FileReader();
+    reader.onload = e => {
+      dataUrl = e.target.result; // data URL
+      preview.src = dataUrl;
+      submitBtn.disabled = !dataUrl;
+    };
+    reader.readAsDataURL(f);
+  });
+
+  submitBtn.addEventListener("click", async ()=>{
+    if (!target || !dataUrl){ msg.textContent="Choose a picture first."; return; }
+    const r = await fetch("/api/kill/submit", {
+      method:"POST",
+      headers:{ "Content-Type":"application/x-www-form-urlencoded" },
+      body: "target=" + encodeURIComponent(target) + "&image=" + encodeURIComponent(dataUrl)
+    });
+    const j = await r.json().catch(()=>({}));
+    if (!r.ok || !j.ok){ msg.textContent = "Submit failed."; return; }
+    msg.textContent = "Kill submitted.";
+    goHome.style.display = "block";
+    submitBtn.disabled = true;
+    fileEl.disabled = true;
+  });
+</script>
+</body>
+</html>

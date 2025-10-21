@@ -1,0 +1,133 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Open Contract — A-List Bounties</title>
+    <style>
+        :root { --bg:#0f172a; --card:#111827; --text:#e5e7eb; --muted:#94a3b8; --accent:#60a5fa; }
+        *{box-sizing:border-box}
+        body{margin:0;min-height:100vh;background:var(--bg);color:var(--text);font-family:system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial}
+        .container{max-width:1000px;margin:0 auto;padding:18px}
+
+        .top-banner{
+          width:100%;background:linear-gradient(180deg,#1e293b,#0f172a);color:#f1f5f9;
+          text-align:left;padding-left:40px;font-family:"Cinzel",serif;font-weight:700;font-size:28px;letter-spacing:2px;
+          padding-top:14px;padding-bottom:18px;border-bottom:2px solid #334155;box-shadow:0 4px 20px rgba(0,0,0,.5);
+          text-transform:uppercase;position:sticky;top:0;z-index:10;
+        }
+        .top-banner::after{display:none;}
+
+        header{display:flex;align-items:center;gap:12px;margin-bottom:14px;margin-top:16px}
+        a.back{padding:8px 12px;border-radius:10px;border:1px solid #1f2937;background:#12213f;color:var(--text);text-decoration:none;font-weight:600}
+        header > div{ margin-left:8px; }
+        h1{margin:0;font-size:20px}
+        p.sub{margin:6px 0 0 0;color:var(--muted)}
+
+        .grid{display:grid;gap:18px;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));margin-top:16px}
+        .card{background:linear-gradient(180deg,#0d1326,#111827);border:1px solid #1f2937;border-radius:16px;padding:16px;text-align:center;box-shadow:0 6px 20px rgba(0,0,0,.4)}
+        .card img{width:90px;height:90px;border-radius:50%;object-fit:cover;margin-bottom:12px;border:1px solid #1f2937}
+        .muted{color:#94a3b8;font-size:13px;margin:0 0 10px 0}
+        .btn{padding:8px 12px;border-radius:10px;border:1px solid #1f2937;background:#1d4ed8;color:#fff;cursor:pointer;font-weight:700}
+        .empty{padding:18px;border:1px dashed #334155;border-radius:12px;text-align:center;color:#cbd5e1}
+        .toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:#0b1220;border:1px solid #1f2937;border-radius:10px;padding:10px 14px;box-shadow:0 8px 24px rgba(0,0,0,.5);display:none}
+        .toast.show{display:block}
+    </style>
+</head>
+<body>
+<header class="top-banner">The Continental</header>
+
+<div class="container">
+    <header>
+        <a class="back" href="/home">← Back</a>
+        <div>
+            <h1>Open Contract</h1>
+            <p class="sub">Choose a target opponent. Reward <strong>+1 point</strong> on kill. Cost: <strong>1 coin</strong>.</p>
+        </div>
+    </header>
+
+    <div id="list" class="grid"></div>
+    <div id="empty" class="empty" style="display:none">No available targets right now.</div>
+</div>
+
+<div id="toast" class="toast"></div>
+
+<script>
+    const listEl  = document.getElementById('list');
+    const emptyEl = document.getElementById('empty');
+    const toast   = document.getElementById('toast');
+
+    function avatarFor(u){
+      return (u.img && u.img.trim())
+        ? u.img
+        : "https://api.dicebear.com/7.x/initials/svg?seed=" + encodeURIComponent(`${u.first||""} ${u.last||""}`);
+    }
+
+    function showToast(msg){
+      toast.textContent = "";
+      toast.append(document.createTextNode(msg + " "));
+      const back = document.createElement('a');
+      back.href = "/home";
+      back.textContent = "Go to Home";
+      back.style.marginLeft = "8px";
+      back.style.textDecoration = "underline";
+      toast.appendChild(back);
+      toast.classList.add('show');
+      setTimeout(() => toast.classList.remove('show'), 4000);
+    }
+
+    async function openContract(targetEmail){
+      const r = await fetch("/api/contract/standard", {
+        method: "POST",
+        headers: { "Content-Type": "application/x-www-form-urlencoded" },
+        body: "target=" + encodeURIComponent(targetEmail)
+      });
+      const data = await r.json().catch(()=>({}));
+      if (!r.ok || !data.ok) {
+        const reason = (data && data.error) || "failed";
+        showToast("Contract not opened: " + reason);
+        return;
+      }
+      showToast("Contract opened!");
+      load();
+    }
+
+    function render(targets){
+      listEl.innerHTML = "";
+      if (!targets || !targets.length){
+        emptyEl.style.display = "block";
+        return;
+      }
+      emptyEl.style.display = "none";
+
+      for (const u of targets){
+        const card = document.createElement("div");
+        card.className = "card";
+        card.innerHTML = `
+          <img src="${avatarFor(u)}" alt="${u.first}'s photo">
+          <h3 style="margin:0 0 6px 0;font-size:18px">${u.first} ${u.last}</h3>
+          <p class="muted">
+            Wanted level: ${u.value}<br>
+            <span style="color:#fbbf24;">Current pot: ${u.worth||0} coin${(u.worth===1)?"":"s"}</span>
+          </p>
+          <button class="btn" data-email="${u.email}">
+            Open Contract (+1) — Cost 1 coin
+          </button>
+        `;
+        listEl.appendChild(card);
+      }
+      listEl.querySelectorAll(".btn").forEach(btn=>{
+        btn.addEventListener("click",()=>openContract(btn.getAttribute("data-email")));
+      });
+    }
+
+    async function load(){
+      const r = await fetch("/api/targets-for-contract");
+      if (!r.ok) { window.location.href = "/login"; return; }
+      const data = await r.json().catch(()=>({targets:[]}));
+      render(data.targets || []);
+    }
+    load();
+</script>
+</body>
+</html>
